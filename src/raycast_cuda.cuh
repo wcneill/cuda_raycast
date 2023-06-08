@@ -15,7 +15,7 @@ void distance_kernel(
     , at::PackedTensorAccessor32<float_t, 2> results
 );
 
-at::Tensor measure_distance_cuda(
+at::Tensor get_distance(
     at::Tensor vertices
     , at::Tensor faces
     , at::Tensor ray_origins

@@ -51,7 +51,7 @@ float_t* cross3d(float_t v1[3], float_t v2[3], float_t result[3]) {
 
 
 // So we have a tensor full of coordinates corresponding to all the vertices in the mesh ---> [V, 3 (x, y, z)]
-// for each face we will also have indices into the vertices tensor. -----------------------> [F, 3 (v1, v2, v3)]
+// for each face we will also have indices into the vertices tensor. -----------------------> [F, 3 (ix_x, ix_y, ix_z)]
 __global__
 void distance_kernel(
     int n_rays, int n_faces,
@@ -91,11 +91,8 @@ void distance_kernel(
             float_t determinant = dot3d(edge1, h);
             float_t inv_det = 1 / determinant;
 
-            printf("Value of determinant: %f\n", determinant);
-
             // no solution if determinant is zero. 
             if ( (determinant > -1e-4) && (determinant < 1e-4) ) {
-                printf("determinant is equal to 0.\n");
                 results[ray_ix][face_ix] = std::numeric_limits<float_t>::infinity();
                 return;
             }
@@ -110,9 +107,8 @@ void distance_kernel(
             cross3d(s, edge1, q);
             float_t v = inv_det * dot3d(ray_direction_ptr, q);
 
-            // validate barycentric coordinates
+            // validate barycentric coordinates (positive, sum to one)
             if (v < 0.0 || u + v > 1) {
-                printf("invalid coordinates: %d, %d \n", u, v);
                 results[ray_ix][face_ix] = std::numeric_limits<float_t>::infinity();
                 return;
             }
@@ -120,14 +116,12 @@ void distance_kernel(
             // calculate distance from ray origin to intersection (t)
             float t = inv_det * dot3d(edge2, q);
             results[ray_ix][face_ix] = t;
-           
-            printf("Exiting index: (%d, %d)\n", ray_ix, face_ix);
         }
     }
 }
 
 __host__
-at::Tensor measure_distance_cuda(
+at::Tensor get_distance(
     at::Tensor vertices
     , at::Tensor faces
     , at::Tensor ray_origins
@@ -150,14 +144,18 @@ at::Tensor measure_distance_cuda(
     at::PackedTensorAccessor32<float_t, 2> ray_o_acc = ray_origins.packed_accessor32<float_t, 2>();
     at::PackedTensorAccessor32<float_t, 2> ray_d_acc = ray_directions.packed_accessor32<float_t, 2>();
 
-    dim3 blocks(1, 1);
-    dim3 threads(1, 1);
+    // determine number of blocks and number of threads per block. 
+    int block_size = 32;
+    int blocks_x = (ray_origins.size(0) + block_size) / block_size;
+    int blocks_y = (faces.size(0) + block_size) / block_size;
+    dim3 blocks(blocks_x, blocks_y);
+    dim3 threads(block_size, block_size);
 
     distance_kernel<<<blocks, threads>>>(
         n_rays, n_faces, vert_acc, 
         face_acc, ray_o_acc, ray_d_acc, d_acc
     );
 
-    return return_tensor.min();
+    return at::amin(return_tensor, 1);
 }
 

@@ -5,14 +5,6 @@
 
 #include "raycast_cuda.cuh"
 
-template <typename T, size_t size> void print(const T (&array)[size])
-{
-	std::cout << "[";
-    for(size_t i = 0; i < size; ++i)
-        std::cout << array[i] << " ";
-	std::cout << "]\n";
-}
-
 int main() {
 
 	auto face_options = at::TensorOptions().dtype(torch::kInt32).device(torch::kCUDA);
@@ -25,10 +17,15 @@ int main() {
 	);
 
 	torch::Tensor faces =  torch::tensor({{0, 1, 2}}, face_options);
-	torch::Tensor ray_origins = torch::tensor({{-.5, .5, 1.}}, vert_options);
-	torch::Tensor ray_directions = torch::tensor({{0, 0, -1}}, vert_options);
+	torch::Tensor ray_origins = torch::tensor(
+		{{-.5, .5, 1.},
+		 {.5, -.5, 1.},
+		 {-.75, .75, 2.2}}, vert_options);
 
-	std::cout << vertices << std::endl;
-    at::Tensor distances = measure_distance_cuda(vertices, faces, ray_origins, ray_directions);
+	torch::Tensor ray_directions = torch::tensor({{0, 0, -1}}, vert_options)
+		.expand({ray_origins.size(0), -1})
+		.contiguous();
+
+    at::Tensor distances = get_distance(vertices, faces, ray_origins, ray_directions);
 	std::cout << distances << std::endl;
 }

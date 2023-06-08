@@ -6,9 +6,10 @@ project(raycast
   LANGUAGES CXX CUDA)
 
 add_executable(cuda_test 
-  test.cpp raycast.cpp raycast_cuda.cu)
+  src/test.cpp src/raycast_cuda.cu src/torch_checks.cpp)
 
-set(Torch_DIR C:/Users/wesle/source/libtorch-win-shared-with-deps-2.0.1+cu118/libtorch/share/cmake/Torch)
+set(Torch_DIR "${CMAKE_CURRENT_SOURCE_DIR}/includes/libtorch/share/cmake/Torch")
+set(CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/includes/libtorch")
 
 find_package(Torch REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
