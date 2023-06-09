@@ -1,11 +1,15 @@
 #include <ATen/ATen.h>
 
-float_t* sub3d(float_t v1[3], float_t v2[3], float_t result[3]);
-float_t* add3d(float_t v1[3], float_t v2[3], float_t result[3]);
-float_t* scaler_mult3d(float_t vector[3], float_t scalar, float_t result[3]);
-float_t dot3d(float_t v1[3], float_t v2[3]);
-float_t* cross3d(float_t v1[3], float_t v2[3], float_t result[3]);
+#include <cuda.h>
+#include <cuda_runtime.h>
 
+__device__ float_t* sub3d(float_t v1[3], float_t v2[3], float_t result[3]);
+__device__ float_t* add3d(float_t v1[3], float_t v2[3], float_t result[3]);
+__device__ float_t* scaler_mult3d(float_t vector[3], float_t scalar, float_t result[3]);
+__device__ float_t dot3d(float_t v1[3], float_t v2[3]);
+__device__ float_t* cross3d(float_t v1[3], float_t v2[3], float_t result[3]);
+
+__global__ 
 void distance_kernel(
     int n_rays, int n_faces
     , at::PackedTensorAccessor32<float_t, 2> vertex_acc
@@ -15,6 +19,7 @@ void distance_kernel(
     , at::PackedTensorAccessor32<float_t, 2> results
 );
 
+__host__
 at::Tensor get_distance(
     at::Tensor vertices
     , at::Tensor faces

@@ -3,7 +3,8 @@
 #include <ATen/ATen.h>
 #include <torch/types.h>
 
-#include "raycast_cuda.cuh"
+#include "raycast.h"
+
 
 int main() {
 
@@ -26,6 +27,6 @@ int main() {
 		.expand({ray_origins.size(0), -1})
 		.contiguous();
 
-    at::Tensor distances = get_distance(vertices, faces, ray_origins, ray_directions);
-	std::cout << distances << std::endl;
+    at::Tensor intersections = find_intersections(vertices, faces, ray_origins, ray_directions);
+	std::cout << intersections << std::endl;
 }

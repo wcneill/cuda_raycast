@@ -4,8 +4,9 @@
 #include <iostream>
 
 #include "torch_checks.h"
+#include "raycast_cuda.cuh"
 
-__device__ __host__
+__device__
 float_t* sub3d(float_t v1[3], float_t v2[3], float_t result[3]) {
 
     for (int r = 0; r < 3; r++){
@@ -14,7 +15,7 @@ float_t* sub3d(float_t v1[3], float_t v2[3], float_t result[3]) {
     return result;
 }
 
-__device__ __host__
+__device__
 float_t* add3d(float_t v1[3], float_t v2[3], float_t result[3]) {
 
     for (int r = 0; r < 3; r++){
@@ -23,7 +24,7 @@ float_t* add3d(float_t v1[3], float_t v2[3], float_t result[3]) {
     return result;
 }
 
-__device__ __host__
+__device__
 float_t* scaler_mult3d(float_t vector[3], float_t scalar, float_t result[3]) {
     for (int r = 0; r < 3; r++){
         result[r] = vector[r] * scalar;
@@ -31,7 +32,7 @@ float_t* scaler_mult3d(float_t vector[3], float_t scalar, float_t result[3]) {
     return result;
 }
 
-__device__ __host__
+__device__
 float_t dot3d(float_t a[3], float_t b[3]) {
     float_t result = 0;
     for (int r = 0; r < 3; r++){
@@ -41,7 +42,7 @@ float_t dot3d(float_t a[3], float_t b[3]) {
     return result;
 }
 
-__device__ __host__
+__device__
 float_t* cross3d(float_t v1[3], float_t v2[3], float_t result[3]) {
     result[0] = v1[1] * v2[2] - v1[2] * v2[1];
     result[1] = v1[2] * v2[0] - v1[0] * v2[2];
@@ -156,6 +157,6 @@ at::Tensor get_distance(
         face_acc, ray_o_acc, ray_d_acc, d_acc
     );
 
-    return at::amin(return_tensor, 1);
+    return at::amin(return_tensor, 1, true); // [R, 1] return shape
 }
 
